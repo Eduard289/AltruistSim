@@ -1,41 +1,62 @@
 import streamlit as st
 import pandas as pd
+import time
 from engine import Agent, run_generation
+from visualizer import draw_petri_dish
 
-st.title("🧬 AltruistSim V2")
+st.set_page_config(page_title="AltruistSim", layout="centered")
 
-# Sidebar con la nueva matemática
+st.title("🧬 AltruistSim: Laboratorio Evolutivo")
+st.markdown("Observa cómo las estrategias de cooperación y traición compiten por la supervivencia.")
+
+# --- Configuración en Sidebar ---
 with st.sidebar:
-    st.header("Configuración Evolutiva")
-    pop_size = st.slider("Población Inicial", 20, 500, 100)
-    mutation = st.slider("Tasa de Mutación", 0.0, 0.2, 0.05)
-    repro = st.slider("Umbral Reprod. (Energía)", 15, 40, 25)
+    st.header("⚙️ Parámetros")
+    pop_size = st.slider("Población Inicial", 50, 300, 100)
+    generations_limit = st.slider("Generaciones Máx.", 10, 100, 50)
+    mutation = st.slider("Tasa Mutación", 0.0, 0.2, 0.05)
     cost = st.slider("Costo de vida", 1, 5, 2)
-    max_age = st.slider("Longevidad máx.", 5, 50, 20)
+    
+    config = {
+        'cost_of_living': cost,
+        'repro_threshold': 25,
+        'mutation_rate': mutation,
+        'max_age': 20
+    }
 
-config = {
-    'cost_of_living': cost,
-    'repro_threshold': repro,
-    'mutation_rate': mutation,
-    'max_age': max_age
-}
-
-if st.button("Simular"):
+# --- Ejecución de Simulación ---
+if st.button("▶️ Iniciar Experimento"):
     strategies = ['Cooperator', 'Cheater', 'TitForTat', 'Grudger', 'Detective']
     agents = [Agent(i, random.choice(strategies)) for i in range(pop_size)]
     
-    history = []
+    # Espacios reservados para que la UI no salte
+    viz_placeholder = st.empty()
+    chart_placeholder = st.empty()
     
-    # Barra de progreso
-    bar = st.progress(0)
-    for g in range(50): # 50 generaciones
+    history = []
+
+    for g in range(generations_limit):
         agents = run_generation(agents, config)
+        
+        # Cómputo de estadísticas
         counts = {s: 0 for s in strategies}
         for a in agents:
             counts[a.strategy] += 1
         history.append(counts)
-        bar.progress((g + 1) / 50)
+        
+        # --- ACTUALIZACIÓN VISUAL ---
+        with viz_placeholder.container():
+            st.subheader(f"Generación {g+1}")
+            draw_petri_dish(counts)
+        
+        with chart_placeholder.container():
+            df = pd.DataFrame(history)
+            st.line_chart(df)
+        
+        if len(agents) == 0:
+            st.error("Extinción total.")
+            break
+            
+        time.sleep(0.1) # Pausa para que el ojo humano lo siga
 
-    df = pd.DataFrame(history)
-    st.line_chart(df)
-    st.write(f"Final de la simulación: {len(agents)} supervivientes.")
+    st.success("Simulación finalizada.")
