@@ -75,7 +75,7 @@ with col2:
         * **Costo de Existencia:** Presión del entorno. Si es alto, el altruismo se vuelve una estrategia de riesgo.
         """)
 
-# --- CONFIGURACIÓN EN SIDEBAR (PARÁMETROS Y PERSONALIDADES) ---
+# --- CONFIGURACIÓN EN SIDEBAR ---
 with st.sidebar:
     st.header("⚙️ Configuración Global")
     pop_size = st.slider("Población Total", 50, 500, 200)
@@ -89,7 +89,6 @@ with st.sidebar:
     p_renc = st.slider("Rencorosos", 0, 100, 20)
     p_dete = st.slider("Detectives", 0, 100, 20)
     
-    # Lógica de normalización
     total_w = p_coop + p_tram + p_reci + p_renc + p_dete
     if total_w == 0: total_w = 1
 
@@ -150,10 +149,10 @@ if st.button("▶️ Lanzar Experimento Social"):
         with chart_placeholder.container():
             df = pd.DataFrame(history)
             st.line_chart(df)
-            st.caption(f"Análisis de Datos: El eje vertical representa el **Número de Individuos** (Población). El eje horizontal representa el transcurso del **Tiempo** (Generaciones).")
+            st.caption(f"Análisis de Datos: El eje vertical representa el Número de Individuos. El eje horizontal representa el Tiempo.")
         
         if len(agents) == 0:
-            st.error("📉 **Colapso Social:** La presión del entorno y la falta de cohesión han extinguido la población.")
+            st.error("📉 **Colapso Social:** La presión del entorno ha extinguido la población.")
             break
         time.sleep(0.05)
 
@@ -161,19 +160,13 @@ if st.button("▶️ Lanzar Experimento Social"):
     if len(agents) > 0:
         st.success(f"""
         ### Simulación Finalizada
-        Tras {len(history)} generaciones, la sociedad ha logrado sobrevivir. Hemos observado cómo las 
-        estrategias de **Reciprocidad** y la capacidad de sancionar la traición son fundamentales 
-        para mantener la estabilidad. Una civilización que perdura es aquella que protege la confianza mutua.
+        Tras {len(history)} generaciones, la sociedad ha logrado sobrevivir. La reciprocidad ha protegido la confianza mutua.
         """)
     else:
         st.warning(f"""
         ### Conclusión del Experimento
-        La sociedad ha colapsado. Este resultado demuestra que cuando el beneficio individual (Trampa) 
-        supera los incentivos de la cooperación, el sistema agota sus recursos y se encamina hacia la extinción.
+        La sociedad ha colapsado. El beneficio individual ha agotado los recursos colectivos.
         """)
 
-st.markdown(f"<div class='footer'>Desarrollado por Jose Luis Asenjo</div>", unsafe_allow_html=True)
-
-    st.success("### Simulación Finalizada")
-
+# --- PIE DE PÁGINA ---
 st.markdown(f"<div class='footer'>Desarrollado por Jose Luis Asenjo</div>", unsafe_allow_html=True)
