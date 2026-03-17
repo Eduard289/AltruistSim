@@ -16,7 +16,8 @@ class Agent:
         if self.strategy == 'TitForTat': return self.last_opponent_move
         if self.strategy == 'Grudger':
             return 'D' if 'D' in self.history else 'C'
-        # Estrategia aleatoria para añadir ruido
+        
+        # Estrategia Detective: Analiza al rival los primeros 4 turnos
         if self.strategy == 'Detective':
             if len(self.history) < 4:
                 return ['C', 'D', 'C', 'C'][len(self.history)]
@@ -25,7 +26,7 @@ class Agent:
 
 def run_generation(agents, config):
     """
-    config: diccionario con 'cost_of_living', 'repro_threshold', 'mutation_rate'
+    config: diccionario con 'cost_of_living', 'repro_threshold', 'mutation_rate', 'max_age'
     """
     random.shuffle(agents)
     payoffs = {
@@ -55,6 +56,7 @@ def run_generation(agents, config):
     for a in agents:
         a.energy -= config['cost_of_living']
         a.age += 1
+        # Sobrevive si tiene energía y no ha superado la edad máxima
         if a.energy > 0 and a.age < config['max_age']:
             survivors.append(a)
 
@@ -63,14 +65,15 @@ def run_generation(agents, config):
     for s in survivors:
         new_generation.append(s)
         if s.energy >= config['repro_threshold']:
-            s.energy -= 10 # Costo de reproducción
+            s.energy -= 10 # Costo energético de reproducirse
             
             # Lógica de Mutación
             child_strategy = s.strategy
             if random.random() < config['mutation_rate']:
                 child_strategy = random.choice(['Cooperator', 'Cheater', 'TitForTat', 'Grudger', 'Detective'])
             
-            child = Agent(random.randint(0, 1e6), child_strategy, energy=10, parent_id=s.id)
+            # CAMBIO AQUÍ: Usamos 1000000 (int) en lugar de 1e6 (float)
+            child = Agent(random.randint(0, 1000000), child_strategy, energy=10, parent_id=s.id)
             new_generation.append(child)
             
     return new_generation
