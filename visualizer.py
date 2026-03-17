@@ -1,23 +1,22 @@
 import streamlit.components.v1 as components
 
 def draw_petri_dish(counts):
-    # Definimos colores para cada estrategia
+    # Colores asociados a la psicología del personaje
     colors = {
-        'Cooperator': '#3498db', # Azul
-        'Cheater': '#e74c3c',    # Rojo
-        'TitForTat': '#9b59b6',  # Púrpura
-        'Grudger': '#f1c40f',    # Amarillo
-        'Detective': '#2ecc71'   # Verde
+        'Cooperador': '#3498db', # Azul (Confianza)
+        'Tramposo': '#e74c3c',   # Rojo (Peligro)
+        'Recíproco': '#9b59b6',  # Púrpura (Justicia)
+        'Rencoroso': '#f1c40f',  # Amarillo (Alerta)
+        'Detective': '#2ecc71'   # Verde (Estrategia)
     }
     
-    # Creamos la lista de partículas para el JS
     particles_js = []
-    for strategy, count in counts.items():
-        if strategy != 'Total':
-            particles_js.append(f"{{ color: '{colors[strategy]}', count: {count} }}")
+    for estrategia, count in counts.items():
+        if estrategia in colors:
+            particles_js.append(f"{{ color: '{colors[estrategia]}', count: {count} }}")
     
     js_code = f"""
-    <canvas id="simCanvas" width="700" height="300" style="background:#1e1e1e; border-radius:10px;"></canvas>
+    <canvas id="simCanvas" width="700" height="250" style="background:#1a1a1a; border-radius:8px;"></canvas>
     <script>
         const canvas = document.getElementById('simCanvas');
         const ctx = canvas.getContext('2d');
@@ -28,8 +27,8 @@ def draw_petri_dish(counts):
             constructor(color) {{
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 4;
-                this.vy = (Math.random() - 0.5) * 4;
+                this.vx = (Math.random() - 0.5) * 3;
+                this.vy = (Math.random() - 0.5) * 3;
                 this.color = color;
             }}
             update() {{
@@ -39,7 +38,7 @@ def draw_petri_dish(counts):
             }}
             draw() {{
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+                ctx.arc(this.x, this.y, 3.5, 0, Math.PI * 2);
                 ctx.fillStyle = this.color;
                 ctx.fill();
                 ctx.closePath();
@@ -58,4 +57,4 @@ def draw_petri_dish(counts):
         animate();
     </script>
     """
-    return components.html(js_code, height=320)
+    return components.html(js_code, height=270)
