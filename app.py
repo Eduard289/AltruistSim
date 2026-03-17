@@ -11,39 +11,87 @@ st.set_page_config(page_title="AltruistSim - Jose Luis Asenjo", layout="centered
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Cardo:wght@400;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Cardo', serif; color: #2c3e50; }
-    .stTitle { font-weight: 700; border-bottom: 1px solid #dcdde1; padding-bottom: 15px; }
-    .logic-box { background-color: #f9f9f9; padding: 20px; border-radius: 8px; border-left: 4px solid #2c3e50; margin-bottom: 25px; }
-    .footer { text-align: center; margin-top: 50px; color: #7f8c8d; font-size: 0.9rem; border-top: 1px solid #eee; padding-top: 20px; }
+    
+    html, body, [class*="css"] {
+        font-family: 'Cardo', serif;
+        color: #2c3e50;
+    }
+    .stTitle {
+        font-weight: 700;
+        font-size: 2.8rem !important;
+        border-bottom: 1px solid #dcdde1;
+        padding-bottom: 15px;
+        margin-bottom: 25px;
+    }
+    .logic-box {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #2c3e50;
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+    .footer {
+        text-align: center;
+        margin-top: 50px;
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("AltruistSim: Laboratorio de Conducta Social")
 
+# --- BLOQUE INFORMATIVO INICIAL ---
 st.markdown("""
 <div class="logic-box">
-    <b>Configuración de Partida:</b> Ahora puedes definir la composición ética inicial de tu sociedad. 
-    Ajusta los porcentajes en la barra lateral para observar cómo influye la configuración inicial en la supervivencia colectiva.
+    <b>Propósito del Experimento:</b> Esta simulación analiza el Capital Social de una comunidad. 
+    A través de la Teoría de Juegos, observamos cómo las premisas éticas individuales determinan 
+    la prosperidad o el colapso de una civilización. Configure la composición inicial de su sociedad 
+    en la barra lateral.
 </div>
 """, unsafe_allow_html=True)
 
-# --- CONFIGURACIÓN EN SIDEBAR ---
+col1, col2 = st.columns(2)
+
+with col1:
+    with st.expander("📖 Definición de Roles Sociales", expanded=False):
+        st.markdown("""
+        * **Cooperadores:** Individuos que apuestan por el bien común de forma incondicional. Motor de la confianza pero vulnerables al parasitismo.
+        * **Tramposos:** Actores que buscan maximizar su beneficio individual traicionando la confianza ajena.
+        * **Recíprocos (Ojo por Ojo):** Representan la justicia distributiva; cooperan con quien coopera y sancionan la traición.
+        * **Rencorosos:** Colaboradores iniciales que, ante una sola traición, pierden la confianza permanentemente.
+        * **Detectives:** Estrategas que analizan el entorno para decidir si es más rentable aliarse o explotar al prójimo.
+        """)
+
+with col2:
+    with st.expander("📊 Glosario de Variables", expanded=False):
+        st.markdown("""
+        * **Población Inicial:** Tamaño del ecosistema. Determina la masa crítica para la propagación de conductas.
+        * **Tiempo Evolutivo:** Duración de la simulación. Mide la resiliencia de las normas culturales.
+        * **Tasa de Cambio:** Probabilidad de nuevas ideas o mutaciones éticas en las nuevas generaciones.
+        * **Costo de Existencia:** Presión del entorno. Si es alto, el altruismo se vuelve una estrategia de riesgo.
+        """)
+
+# --- CONFIGURACIÓN EN SIDEBAR (PARÁMETROS Y PERSONALIDADES) ---
 with st.sidebar:
     st.header("⚙️ Configuración Global")
     pop_size = st.slider("Población Total", 50, 500, 200)
     generations_limit = st.slider("Tiempo Evolutivo (Generaciones)", 10, 150, 50)
     
     st.markdown("---")
-    st.header("👥 Composición de la Sociedad (%)")
+    st.header("👥 Perfiles de Personalidad (%)")
     p_coop = st.slider("Cooperadores", 0, 100, 20)
     p_tram = st.slider("Tramposos", 0, 100, 20)
     p_reci = st.slider("Recíprocos", 0, 100, 20)
     p_renc = st.slider("Rencorosos", 0, 100, 20)
     p_dete = st.slider("Detectives", 0, 100, 20)
     
-    # Normalización automática de pesos
-    total_weights = p_coop + p_tram + p_reci + p_renc + p_dete
-    if total_weights == 0: total_weights = 1 # Evitar división por cero
+    # Lógica de normalización
+    total_w = p_coop + p_tram + p_reci + p_renc + p_dete
+    if total_w == 0: total_w = 1
 
     st.markdown("---")
     st.header("🌍 Reglas del Entorno")
@@ -57,16 +105,15 @@ with st.sidebar:
         'max_age': 25
     }
 
-# --- LÓGICA DE INICIALIZACIÓN DE AGENTES ---
-def crear_poblacion():
+# --- MOTOR DE INICIALIZACIÓN ---
+def inicializar_sociedad():
     poblacion = []
-    # Calculamos cuántos agentes de cada tipo basándonos en los sliders
     counts = {
-        'Cooperador': int((p_coop / total_weights) * pop_size),
-        'Tramposo': int((p_tram / total_weights) * pop_size),
-        'Recíproco': int((p_reci / total_weights) * pop_size),
-        'Rencoroso': int((p_renc / total_weights) * pop_size),
-        'Detective': int((p_dete / total_weights) * pop_size)
+        'Cooperador': int((p_coop / total_w) * pop_size),
+        'Tramposo': int((p_tram / total_w) * pop_size),
+        'Recíproco': int((p_reci / total_w) * pop_size),
+        'Rencoroso': int((p_renc / total_w) * pop_size),
+        'Detective': int((p_dete / total_w) * pop_size)
     }
     
     idx = 0
@@ -74,16 +121,15 @@ def crear_poblacion():
         for _ in range(num):
             poblacion.append(Agent(idx, est))
             idx += 1
-            
-    # Rellenar si por redondeo falta alguno para llegar a pop_size
+    
     while len(poblacion) < pop_size:
         poblacion.append(Agent(idx, random.choice(list(counts.keys()))))
         idx += 1
     return poblacion
 
-# --- EJECUCIÓN ---
+# --- EJECUCIÓN DEL EXPERIMENTO ---
 if st.button("▶️ Lanzar Experimento Social"):
-    agents = crear_poblacion()
+    agents = inicializar_sociedad()
     viz_placeholder = st.empty()
     chart_placeholder = st.empty()
     history = []
@@ -92,7 +138,6 @@ if st.button("▶️ Lanzar Experimento Social"):
     for g in range(generations_limit):
         agents = run_generation(agents, config)
         
-        # Estadísticas
         current_counts = {s: 0 for s in estrategias}
         for a in agents:
             current_counts[a.strategy] += 1
@@ -105,12 +150,29 @@ if st.button("▶️ Lanzar Experimento Social"):
         with chart_placeholder.container():
             df = pd.DataFrame(history)
             st.line_chart(df)
-            st.caption(f"Eje Y: Población | Eje X: Tiempo. Población actual: {len(agents)} agentes.")
+            st.caption(f"Análisis de Datos: El eje vertical representa el **Número de Individuos** (Población). El eje horizontal representa el transcurso del **Tiempo** (Generaciones).")
         
         if len(agents) == 0:
-            st.error("📉 **Colapso Social:** La falta de cohesión y el costo de vida han extinguido la sociedad.")
+            st.error("📉 **Colapso Social:** La presión del entorno y la falta de cohesión han extinguido la población.")
             break
         time.sleep(0.05)
+
+    # --- CONCLUSIÓN DINÁMICA ---
+    if len(agents) > 0:
+        st.success(f"""
+        ### Simulación Finalizada
+        Tras {len(history)} generaciones, la sociedad ha logrado sobrevivir. Hemos observado cómo las 
+        estrategias de **Reciprocidad** y la capacidad de sancionar la traición son fundamentales 
+        para mantener la estabilidad. Una civilización que perdura es aquella que protege la confianza mutua.
+        """)
+    else:
+        st.warning(f"""
+        ### Conclusión del Experimento
+        La sociedad ha colapsado. Este resultado demuestra que cuando el beneficio individual (Trampa) 
+        supera los incentivos de la cooperación, el sistema agota sus recursos y se encamina hacia la extinción.
+        """)
+
+st.markdown(f"<div class='footer'>Desarrollado por Jose Luis Asenjo</div>", unsafe_allow_html=True)
 
     st.success("### Simulación Finalizada")
 
