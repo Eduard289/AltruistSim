@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import time
+import random  # <--- ¡ESTA ES LA LÍNEA QUE FALTABA!
 from engine import Agent, run_generation
 from visualizer import draw_petri_dish
 
@@ -27,6 +28,7 @@ with st.sidebar:
 # --- Ejecución de Simulación ---
 if st.button("▶️ Iniciar Experimento"):
     strategies = ['Cooperator', 'Cheater', 'TitForTat', 'Grudger', 'Detective']
+    # Aquí es donde usamos random:
     agents = [Agent(i, random.choice(strategies)) for i in range(pop_size)]
     
     # Espacios reservados para que la UI no salte
