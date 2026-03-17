@@ -1,58 +1,76 @@
 import random
-
-# Definición de la matriz de pagos (Payoff Matrix)
-# T: Tentación, R: Recompensa, P: Castigo, S: Sufrimiento
-PAYOFFS = {
-    ('C', 'C'): (3, 3),  # Ambos cooperan
-    ('C', 'D'): (0, 5),  # Tú cooperas, el otro traiciona
-    ('D', 'C'): (5, 0),  # Tú traicionas, el otro coopera
-    ('D', 'D'): (1, 1)   # Ambos traicionan
-}
+import numpy as np
 
 class Agent:
-    def __init__(self, id, strategy, energy=10):
+    def __init__(self, id, strategy, energy=15, parent_id=None):
         self.id = id
-        self.strategy = strategy  # 'Cooperator', 'Cheater', 'TitForTat', 'Grudger'
+        self.strategy = strategy
         self.energy = energy
         self.history = []
         self.last_opponent_move = 'C'
+        self.age = 0
 
     def decide(self):
-        if self.strategy == 'Cooperator':
-            return 'C'
-        if self.strategy == 'Cheater':
-            return 'D'
-        if self.strategy == 'TitForTat':
-            return self.last_opponent_move
+        if self.strategy == 'Cooperator': return 'C'
+        if self.strategy == 'Cheater': return 'D'
+        if self.strategy == 'TitForTat': return self.last_opponent_move
         if self.strategy == 'Grudger':
             return 'D' if 'D' in self.history else 'C'
+        # Estrategia aleatoria para añadir ruido
+        if self.strategy == 'Detective':
+            if len(self.history) < 4:
+                return ['C', 'D', 'C', 'C'][len(self.history)]
+            return self.last_opponent_move if 'D' in self.history[:4] else 'D'
         return 'C'
 
-def run_generation(agents, cost_of_living=1):
+def run_generation(agents, config):
+    """
+    config: diccionario con 'cost_of_living', 'repro_threshold', 'mutation_rate'
+    """
     random.shuffle(agents)
-    # Emparejamiento y duelo
+    payoffs = {
+        ('C', 'C'): (3, 3),
+        ('C', 'D'): (0, 5),
+        ('D', 'C'): (5, 0),
+        ('D', 'D'): (1, 1)
+    }
+
+    # 1. Duelos (Interacción Social)
     for i in range(0, len(agents) - 1, 2):
         a1, a2 = agents[i], agents[i+1]
-        move1, move2 = a1.decide(), a2.decide()
+        m1, m2 = a1.decide(), a2.decide()
         
-        p1, p2 = PAYOFFS[(move1, move2)]
-        a1.energy += p1
-        a2.energy += p2
+        r1, r2 = payoffs[(m1, m2)]
+        a1.energy += r1
+        a2.energy += r2
         
-        a1.history.append(move1)
-        a2.history.append(move2)
-        a1.last_opponent_move = move2
-        a2.last_opponent_move = move1
+        # Actualizar memorias
+        a1.history.append(m1)
+        a2.history.append(m2)
+        a1.last_opponent_move = m2
+        a2.last_opponent_move = m1
 
-    # Supervivencia y Reproducción
-    new_population = []
+    # 2. Metabolismo y Selección Natural
+    survivors = []
     for a in agents:
-        a.energy -= cost_of_living
-        if a.energy > 0:
-            new_population.append(a)
-            # Reproducción si tiene mucha energía
-            if a.energy > 20:
-                a.energy -= 10
-                new_population.append(Agent(random.randint(0,10000), a.strategy))
-    
-    return new_population
+        a.energy -= config['cost_of_living']
+        a.age += 1
+        if a.energy > 0 and a.age < config['max_age']:
+            survivors.append(a)
+
+    # 3. Reproducción y Mutación
+    new_generation = []
+    for s in survivors:
+        new_generation.append(s)
+        if s.energy >= config['repro_threshold']:
+            s.energy -= 10 # Costo de reproducción
+            
+            # Lógica de Mutación
+            child_strategy = s.strategy
+            if random.random() < config['mutation_rate']:
+                child_strategy = random.choice(['Cooperator', 'Cheater', 'TitForTat', 'Grudger', 'Detective'])
+            
+            child = Agent(random.randint(0, 1e6), child_strategy, energy=10, parent_id=s.id)
+            new_generation.append(child)
+            
+    return new_generation
