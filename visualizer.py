@@ -1,16 +1,14 @@
 import streamlit.components.v1 as components
 
 def draw_petri_dish(counts):
-    # Colores sólidos y vibrantes para máxima visibilidad
     colors = {
-        'Cooperador': '#3498db', # Azul
-        'Tramposo': '#e74c3c',   # Rojo
-        'Recíproco': '#9b59b6',  # Púrpura
-        'Rencoroso': '#f1c40f',  # Amarillo
-        'Detective': '#2ecc71'   # Verde
+        'Cooperador': '#3498db',
+        'Tramposo': '#e74c3c',
+        'Recíproco': '#9b59b6',
+        'Rencoroso': '#f1c40f',
+        'Detective': '#2ecc71'
     }
     
-    # Preparamos los datos
     particles_data = []
     for estrategia, count in counts.items():
         if estrategia in colors:
@@ -18,10 +16,12 @@ def draw_petri_dish(counts):
     
     json_data = "[" + ", ".join(particles_data) + "]"
 
-    # Código HTML/JS de alta visibilidad (como el de ayer)
+    # Hemos forzado el fondo negro en el CSS del <html> y <body>
     html_template = """
-    <body style="margin: 0; padding: 0; background: #1a1a1a; overflow: hidden;">
-        <canvas id="simCanvas" width="700" height="250" style="background:#1a1a1a; border-radius:8px;"></canvas>
+    <!DOCTYPE html>
+    <html style="background-color: #1a1a1a; margin: 0; padding: 0;">
+    <body style="background-color: #1a1a1a; margin: 0; padding: 0; overflow: hidden;">
+        <canvas id="simCanvas" width="700" height="250" style="display: block;"></canvas>
         <script>
             const canvas = document.getElementById('simCanvas');
             const ctx = canvas.getContext('2d');
@@ -32,8 +32,8 @@ def draw_petri_dish(counts):
                 constructor(color) {
                     this.x = Math.random() * canvas.width;
                     this.y = Math.random() * canvas.height;
-                    this.vx = (Math.random() - 0.5) * 4;
-                    this.vy = (Math.random() - 0.5) * 4;
+                    this.vx = (Math.random() - 0.5) * 3;
+                    this.vy = (Math.random() - 0.5) * 3;
                     this.color = color;
                 }
                 update() {
@@ -43,14 +43,13 @@ def draw_petri_dish(counts):
                 }
                 draw() {
                     ctx.beginPath();
-                    ctx.arc(this.x, this.y, 4.5, 0, Math.PI * 2); // Puntos grandes y claros
+                    ctx.arc(this.x, this.y, 4.5, 0, Math.PI * 2);
                     ctx.fillStyle = this.color;
                     ctx.fill();
                     ctx.closePath();
                 }
             }
 
-            // Creamos las partículas inmediatamente
             data.forEach(group => {
                 for(let i=0; i<group.count; i++) {
                     particles.push(new Particle(group.color));
@@ -59,7 +58,6 @@ def draw_petri_dish(counts):
 
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                // Fondo sólido para evitar parpadeos blancos
                 ctx.fillStyle = '#1a1a1a';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
@@ -72,6 +70,7 @@ def draw_petri_dish(counts):
             animate();
         </script>
     </body>
+    </html>
     """
     
     final_html = html_template.replace("REPLACE_ME_DATA", json_data)
