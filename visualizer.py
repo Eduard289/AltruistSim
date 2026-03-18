@@ -1,77 +1,62 @@
 import streamlit.components.v1 as components
 
 def draw_petri_dish(counts):
+    # Definimos colores para cada estrategia
+    # Nota: Esta versión usa los nombres originales en inglés
     colors = {
-        'Cooperador': '#3498db',
-        'Tramposo': '#e74c3c',
-        'Recíproco': '#9b59b6',
-        'Rencoroso': '#f1c40f',
-        'Detective': '#2ecc71'
+        'Cooperator': '#3498db', # Azul
+        'Cheater': '#e74c3c',    # Rojo
+        'TitForTat': '#9b59b6',  # Púrpura
+        'Grudger': '#f1c40f',    # Amarillo
+        'Detective': '#2ecc71'   # Verde
     }
     
-    particles_data = []
-    for estrategia, count in counts.items():
-        if estrategia in colors:
-            particles_data.append(f"{{ color: '{colors[estrategia]}', count: {count} }}")
+    # Creamos la lista de partículas para el JavaScript
+    particles_js = []
+    for strategy, count in counts.items():
+        if strategy != 'Total' and strategy in colors:
+            particles_js.append(f"{{ color: '{colors[strategy]}', count: {count} }}")
     
-    json_data = "[" + ", ".join(particles_data) + "]"
+    js_code = f"""
+    <canvas id="simCanvas" width="700" height="300" style="background:#1e1e1e; border-radius:10px;"></canvas>
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const data = [{", ".join(particles_js)}];
+        let particles = [];
 
-    # Hemos forzado el fondo negro en el CSS del <html> y <body>
-    html_template = """
-    <!DOCTYPE html>
-    <html style="background-color: #1a1a1a; margin: 0; padding: 0;">
-    <body style="background-color: #1a1a1a; margin: 0; padding: 0; overflow: hidden;">
-        <canvas id="simCanvas" width="700" height="250" style="display: block;"></canvas>
-        <script>
-            const canvas = document.getElementById('simCanvas');
-            const ctx = canvas.getContext('2d');
-            const data = REPLACE_ME_DATA;
-            let particles = [];
+        class Particle {{
+            constructor(color) {{
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.color = color;
+            }}
+            update() {{
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }}
+            draw() {{
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.closePath();
+            }}
+        }}
 
-            class Particle {
-                constructor(color) {
-                    this.x = Math.random() * canvas.width;
-                    this.y = Math.random() * canvas.height;
-                    this.vx = (Math.random() - 0.5) * 3;
-                    this.vy = (Math.random() - 0.5) * 3;
-                    this.color = color;
-                }
-                update() {
-                    this.x += this.vx; this.y += this.vy;
-                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-                }
-                draw() {
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, 4.5, 0, Math.PI * 2);
-                    ctx.fillStyle = this.color;
-                    ctx.fill();
-                    ctx.closePath();
-                }
-            }
+        data.forEach(group => {{
+            for(let i=0; i<group.count; i++) particles.push(new Particle(group.color));
+        }});
 
-            data.forEach(group => {
-                for(let i=0; i<group.count; i++) {
-                    particles.push(new Particle(group.color));
-                }
-            });
-
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#1a1a1a';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                particles.forEach(p => {
-                    p.update();
-                    p.draw();
-                });
-                requestAnimationFrame(animate);
-            }
-            animate();
-        </script>
-    </body>
-    </html>
+        function animate() {{
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {{ p.update(); p.draw(); }});
+            requestAnimationFrame(animate);
+        }}
+        animate();
+    </script>
     """
-    
-    final_html = html_template.replace("REPLACE_ME_DATA", json_data)
-    return components.html(final_html, height=270)
+    return components.html(js_code, height=320)
