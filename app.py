@@ -8,6 +8,7 @@ from visualizer import draw_petri_dish
 # --- CONFIGURACIÓN DE PÁGINA Y ESTILO ---
 st.set_page_config(page_title="AltruistSim - Jose Luis Asenjo", layout="centered")
 
+# Inyección de CSS para tipografía Cardo y estética de laboratorio
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Cardo:wght@400;700&display=swap');
@@ -154,7 +155,9 @@ if st.button("▶️ Lanzar Experimento Social"):
         if len(agents) == 0:
             st.error("📉 **Colapso Social:** La presión del entorno ha extinguido la población.")
             break
-        time.sleep(0.05)
+        
+        # AJUSTE CRÍTICO: 0.5 segundos para evitar fogonazos y permitir el renderizado visual
+        time.sleep(0.5)
 
     # --- CONCLUSIÓN DINÁMICA ---
     if len(agents) > 0:
